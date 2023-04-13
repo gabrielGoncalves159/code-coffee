@@ -152,9 +152,7 @@ export default defineComponent({
       this.showModal = false;
     },
     async cadastrarUsuario() {
-      const payload = this.formUsuario;
-      console.log(payload)
-      
+      const payload = JSON.parse(JSON.stringify(this.formUsuario));
       await usuario.inserirUsuario(payload)
     },
   },
@@ -170,15 +168,6 @@ export default defineComponent({
         { headerName: 'CPF', field: "CPF" },
         { headerName: 'Tipo', field: "descricao" },
         { headerName: 'Ação', field: "acao" },
-        {
-          field: 'country',
-          width: 150,
-          rowGroupIndex: 0,
-          icons: {
-            sortAscending: '<i class="fa fa-sort-alpha-up"/>',
-            sortDescending: '<i class="fa fa-sort-alpha-down"/>',
-          },
-        },
       ],
     });
 

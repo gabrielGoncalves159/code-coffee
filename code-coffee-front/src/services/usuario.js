@@ -1,3 +1,4 @@
+/* eslint-disable no-debugger */
 import api from "./api";
 
 export default {
@@ -21,9 +22,10 @@ export default {
     },
 
     async inserirUsuario(payload) {
+        console.log(payload)
+        debugger
         try {
-            await api().post('/inserir', payload.target);
-            console.log(payload.target)
+            await api().post('/inserir', payload);
         } catch(error) {
             return console.log(error);
         }
