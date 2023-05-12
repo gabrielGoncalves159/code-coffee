@@ -1,4 +1,4 @@
-const validerBody = (req, res, next) => {
+const validarBody = (req, res, next) => {
 	const {body} = req;
 	console.log(body);
 
@@ -10,5 +10,5 @@ const validerBody = (req, res, next) => {
 };
 
 module.exports = {
-	validerBody
+	validarBody
 };

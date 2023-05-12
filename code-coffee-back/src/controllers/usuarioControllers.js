@@ -1,7 +1,7 @@
 const usuarioModel = require('../models/usuarioModels');
 
 const listarUsuarios = async (req, res) => {
-	const [listaUsuario] = await usuarioModel.getUsuario();
+	const [listaUsuario] = await usuarioModel.getUsuario(req.body);
 	return res.status(200).json(listaUsuario);
 };
 

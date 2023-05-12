@@ -1,8 +1,24 @@
 // arquivo onde contera as funções que irão fazer as requisições com o banco
 const connection = require('./connection');
 
-const getUsuario = async () => {
-	const response = await connection.execute('SELECT id_usuario, nome, CPF, telefone, t.descricao FROM usuario u LEFT JOIN tipo_usuario t ON t.id_tipo_usuario = u.id_tipo_usuario');
+const getUsuario = async (req) => {
+	const {id_usuario, nome} = req;
+
+	var query = 'SELECT id_usuario, nome, CPF, telefone, t.descricao FROM usuario u LEFT JOIN tipo_usuario t ON t.id_tipo_usuario = u.id_tipo_usuario ';
+	
+	if(id_usuario !== 0 || nome !== ''){
+		query += 'WHERE ';
+	}
+	if (id_usuario !== 0){
+		query += `id_usuario = ${id_usuario}`;
+	}
+	if (id_usuario !== 0 && nome !== ''){
+		query += ' AND ';
+	}
+	if(nome !== ''){
+		query += `nome = '${nome}'`;
+	}
+	const response = await connection.execute(query);
 	return response;
 };
 
@@ -12,8 +28,6 @@ const getTipoUsuario = async () => {
 };
 
 const insertUsuario = async (res) => {
-	console.log(res);
-	
 	const nome = res.nome;
 	const cpf = res.cpf;
 	const senha = res.senha;
@@ -27,7 +41,6 @@ const insertUsuario = async (res) => {
 };
 
 const updateUsuario = async (req) => {
-	console.log(req);
 	const {id, nome, cpf, senha, telefone, idTipoUsuario} = req;
 	const query = 'CALL alterar_usuario(?,?,?,?,?,?)';
 	const response = await connection.execute(query, [id, nome, cpf, senha, telefone, idTipoUsuario]);
