@@ -5,15 +5,29 @@
       <header class="modal-card-head">
         <div class="field is-grouped group">
           <div class="control">
-            <Input :label="'Código'" :type="'text'" style="width: 80px" />
+            <div class="container">
+              <div class="field">
+                <label class="title is-6">Código:</label>
+                <div class="control">
+                  <input class="input" type="text" v-model="formPesquisa.codigo" style="width: 80px"/>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="control">
-            <Input :label="'Produto'" :type="'text'" style="width: 400px"/>
+            <div class="container">
+              <div class="field">
+                <label class="title is-6">Produto:</label>
+                <div class="control">
+                  <input class="input" type="text" v-model="formPesquisa.nomeProduto" style="width: 400px"/>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="control">
             <div class="field is-grouped">
               <div class="control">
-                <button class="button is-info">Pesquisar</button>
+                <button class="button is-info" @click="listarProdutos()">Pesquisar</button>
               </div>
               <div class="control">
                 <button class="button is-primary" @click="abrirModal()">
@@ -29,13 +43,40 @@
             <button class="delete" aria-label="close" @click="fecharModal()"></button>
           </template>
           <template v-slot:body>
-            <Input :label="'Código'" :type="'text'"/>
-            <Input :label="'Nome'" :type="'text'" />
-            <Input :label="'Valor Unitário'" :type="'text'" />
-            <Select :label="'Unidade'" :options="optionSelect"/>
+
+            <div class="container">
+              <div class="field">
+                <label class="title is-6">Nome Produto:</label>
+                <div class="control">
+                  <input class="input" type="text" v-model="formProduto.nomeProduto"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="container">
+              <div class="field">
+                <label class="title is-6">Valor Unitário:</label>
+                <div class="control">
+                  <input class="input" type="text" v-model="formProduto.valorUnitario"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="control is-expanded">
+              <label class="title is-6">Unidade Medida:</label>
+              <div class="control is-expanded">
+                <div class="select is-link">
+                  <select v-model="formProduto.unidadeMedida" :style="{ width: '200px' }">
+                    <option v-for="option in unidadeMedida" :value="option.title" :key="option.value">
+                      {{ option.title }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>  
           </template>
           <template v-slot:footer>
-            <button class="button is-success">Salvar</button>
+            <button class="button is-success" type="submit" @click="cadastrarProduto()">Salvar</button>
             <button class="button" @click="fecharModal()">Cancelar</button>
           </template>
         </modal-padrao>
@@ -61,23 +102,50 @@
 <script>
 import { defineComponent } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
-import { reactive, onMounted, ref } from "vue";
-import Input from "@/components/form/Input.vue";
-import Select from "@/components/form/Select.vue";
+import { reactive, ref } from "vue";
+import produto from "../services/produto"
 
-import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
-import "ag-grid-community/styles/ag-theme-material.css"; // Optional theme CSS
 import ModalPadrao from "@/components/modal/ModalPadrao.vue";
 
 export default defineComponent({
   name: "VendaBalcao",
-  components: { AgGridVue, Input, Select, ModalPadrao },
+  components: { AgGridVue, ModalPadrao },
   emits: ["eventAbrirModal"],
   data() {
     return {
+      formProduto: {
+        nomeProduto: '',
+        valorUnitario: '',
+        unidadeMedida: '',
+      },
+      formPesquisa: {
+        codigo: '',
+        nomeProduto: '',
+      },
       showModal: false,
       optionSelect: [],
+      unidadeMedida: [
+        {
+          value: 1,
+          title: "UN"
+        },
+        {
+          value: 2,
+          title: "KG"
+        },
+        {
+          value: 3,
+          title: "L"
+        },
+        {
+          value: 4,
+          title: "CX"
+        },
+      ],
     };
+  },
+  mounted(){
+    this.listarProdutos();
   },
   methods: {
     abrirModal() {
@@ -86,17 +154,37 @@ export default defineComponent({
     fecharModal() {
       this.showModal = false;
     },
+    async cadastrarProduto() {
+      const payload = JSON.parse(JSON.stringify(this.formProduto));
+      await produto.inserirProduto(payload)
+      this.fecharModal()
+      this.listarProdutos()
+    },
+    async listarProdutos() {
+      console.log(this.formPesquisa)
+      // eslint-disable-next-line no-debugger
+      debugger;
+      const response = await produto.listarProdutos(
+        {
+          id_produto: this.formPesquisa.codigo == '' ? 0 : parseInt(this.formPesquisa.codigo),
+          nome: this.formPesquisa.nomeProduto
+        }
+      );
+      this.rowData.value = response;
+    },
+    
   },
   setup() {
     const gridApi = ref(null);
     const rowData = reactive({});
+
     const columnDefs = reactive({
       value: [
-        { field: "Código" },
-        { field: "Produto" },
-        { field: "Unid. Medida" },
-        { field: "Valor" },
-        { field: "Ação" },
+        { headerName: "Código", field: "id_produto" },
+        { headerName: "Produto", field: "nome" },
+        { headerName: "Unid. Medida", field: "unidade_medida" },
+        { headerName: "Valor", field: "valor_produto" },
+        { headerName: "Ação" },
       ],
     });
 
@@ -110,13 +198,6 @@ export default defineComponent({
       filter: true,
       flex: 1,
     };
-
-    // Example load data from sever
-    onMounted(() => {
-      fetch("https://www.ag-grid.com/example-assets/row-data.json")
-        .then((result) => result.json())
-        .then((remoteRowData) => (rowData.value = remoteRowData));
-    });
 
     return {
       onGridReady,
@@ -136,6 +217,9 @@ export default defineComponent({
 </script>
 
 <style>
+@import "ag-grid-community/styles/ag-grid.css"; 
+@import "ag-grid-community/styles/ag-theme-material.css";
+
 .teste {
   display: flex;
 }

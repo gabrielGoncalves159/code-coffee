@@ -5,10 +5,24 @@
       <header class="modal-card-head">
         <div class="field is-grouped group">
           <div class="control">
-            <Input :label="'Matricula'" :type="'text'" style="width: 80px"/>
+            <div class="container">
+              <div class="field">
+                <label class="title is-6">Matricula:</label>
+                <div class="control">
+                  <input class="input" type="text" v-model="formPesquisa.matricula" style="width: 80px"/>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="control">
-            <Input :label="'Nome'" :type="'text'" style="width: 400px"/>
+            <div class="container">
+              <div class="field">
+                <label class="title is-6">Nome:</label>
+                <div class="control">
+                  <input class="input" type="text" v-model="formPesquisa.nomeUsuario" style="width: 400px"/>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="control">
             <div class="field is-grouped">
@@ -95,16 +109,20 @@
         </modal-padrao>
       </header>
       <div class="card-content">
+        <div style="margin-bottom: 5px;">
+            <button v-on:click="onEditClick(rowSelection)">Excluir</button>
+            <button v-on:click="onDeleteClick()">Alterar</button>
+        </div>
         <ag-grid-vue
           class="ag-theme-material"
           style="height: 250px"
           :columnDefs="columnDefs.value"
           :rowData="rowData.value"
           :defaultColDef="defaultColDef"
-          rowSelection="multiple"
-          animateRows="true"
-          @cell-clicked="cellWasClicked"
+          :rowSelection="rowSelection"
           @grid-ready="onGridReady"
+          @cellClicked="onCellClicked"
+          @selection-changed="onSelectionChanged"
         >
         </ag-grid-vue>
       </div>
@@ -116,17 +134,14 @@
 import { defineComponent } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { reactive, ref } from "vue";
-import Input from "@/components/form/Input.vue";
-// import Select from "@/components/form/Select.vue";
 
-import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
-import "ag-grid-community/styles/ag-theme-material.css"; // Optional theme CSS
 import ModalPadrao from "@/components/modal/ModalPadrao.vue";
 import usuario from '../services/usuario'
+import deleteUpdateVue from "../components/grid/deleteUpdate.vue";
 
 export default defineComponent({
   name: "CadastroUsuario",
-  components: { AgGridVue, Input, ModalPadrao },
+  components: { AgGridVue, ModalPadrao },
   data() {
     return {
       formUsuario: {
@@ -136,8 +151,13 @@ export default defineComponent({
         telefone: '',
         senha: '',
       },
+      formPesquisa: {
+        matricula: '',
+        nomeUsuario: '',
+      },
       showModal: false,
       selectedOption: null,
+      rowSelection: null,
     };
   },
   mounted() {
@@ -145,6 +165,11 @@ export default defineComponent({
     this.listarTipoUsuario()
   },
   methods: {
+    onSelectionChanged() {
+      const selectedRows = this.gridApi.getSelectedRows();
+      document.querySelector('#selectedRows').innerHTML =
+        selectedRows.length === 1 ? selectedRows[0].athlete : '';
+    },
     abrirModal() {
       this.showModal = true;
     },
@@ -154,27 +179,65 @@ export default defineComponent({
     async cadastrarUsuario() {
       const payload = JSON.parse(JSON.stringify(this.formUsuario));
       await usuario.inserirUsuario(payload)
+      this.fecharModal()
+    },
+    onCellClicked(params) {
+      if (params.column.colId === 'action') {
+        params.data.onDeleteClick(params.data);
+      }
+    },
+    onEditClick(data) {
+      console.log('Editando', data);
+    },
+    onDeleteClick(data) {
+      console.log('Deletando', data);
+    },
+    async listarUsuarios() {
+      const response = await usuario.listarUsuarios(
+        {
+          id_usuario: this.formPesquisa.matricula == '' ? 0 : parseInt(this.formPesquisa.matricula),
+          nome: this.formPesquisa.nomeUsuario
+        }
+      );
+      this.rowData.value = response;
+    },
+  },
+  computed: {
+    frameworkComponents() {
+      return {
+        actionsRenderer: deleteUpdateVue,
+      };
     },
   },
   setup() {
     const gridApi = ref(null);
+    const gridColumnApi = ref(null);
     const rowData = reactive({});
     const tipoUsuario = [];
+
     const columnDefs = reactive({
       value: [
-        { headerName: 'Matricula', field: "id_usuario" },
+        { 
+          headerName: 'Matricula', 
+          field: "id_usuario",
+          headerCheckboxSelection: true,
+          headerCheckboxSelectionFilteredOnly: true,
+          checkboxSelection: true, 
+        },
         { headerName: 'Nome do Usuario', field: "nome" },
         { headerName: 'Telefone', field: "telefone" },
         { headerName: 'CPF', field: "CPF" },
         { headerName: 'Tipo', field: "descricao" },
-        { headerName: 'Ação', field: "acao" },
+        {
+          headerName: 'Ações',
+          cellRenderer: 'actionsRenderer',
+          cellRendererParams: {
+            // onEditClick: this.onEditClick,
+            // onDeleteClick: this.onDeleteClick,
+          },
+        }
       ],
     });
-
-    const listarUsuarios = async () => {
-      const response = await usuario.listarUsuarios();
-      rowData.value = response;
-    };
 
     const listarTipoUsuario = async () => {
       const response = await usuario.listarTipoUsuario();
@@ -186,26 +249,24 @@ export default defineComponent({
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
+      gridColumnApi.value = params.columnApi;
     };
 
     const defaultColDef = {
       sortable: true,
+      resizable: true,
       filter: true,
       flex: 1,
+      minWidth: 100,
     };
 
     return {
-      listarUsuarios,
       listarTipoUsuario,
       onGridReady,
       columnDefs,
       rowData,
       defaultColDef,
       tipoUsuario,
-      cellWasClicked: (event) => {
-        // Example of consuming Grid Event
-        console.log("cell was clicked", event);
-      },
       deselectRows: () => {
         gridApi.value.deselectAll();
       },
@@ -215,6 +276,9 @@ export default defineComponent({
 </script>
 
 <style>
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-material.css";
+@import "../../node_modules/@fortawesome/fontawesome-free/css/all.css";
 .teste {
   display: flex;
 }

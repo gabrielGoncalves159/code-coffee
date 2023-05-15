@@ -1,11 +1,10 @@
-/* eslint-disable no-debugger */
 import api from "./api";
 
 export default {
 
-    async listarUsuarios() {
+    async listarUsuarios(params) {
         try {
-            const response = await api().get('/listar');
+            const response = await api().post('usuarios/listar', params);
             return response.data;
         } catch(error) {
             return console.log(error);
@@ -14,35 +13,33 @@ export default {
 
     async listarTipoUsuario() {
         try {
-            const response = await api().get('/listarTipoUsuario');
+            const response = await api().get('usuarios/listarTipoUsuario');
             return response.data;
         } catch (error) {
             return console.log(error);
         }
     },
 
-    async inserirUsuario(payload) {
-        console.log(payload)
-        debugger
+    async inserirUsuario(params) {
         try {
-            await api().post('/inserir', payload);
+            await api().post('usuarios/inserir', params);
         } catch(error) {
             return console.log(error);
         }
     },
 
-    async editarUsuario(payload) {
+    async editarUsuario(params) {
         try {
-            const response = await api.patch('/editar', payload);
+            const response = await api.patch('usuarios/editar', params);
             return response.data;
         } catch(error) {
             return console.log(error);
         }
     },
 
-    async excluirUsuario(payload) {
+    async excluirUsuario(params) {
         try {
-            const response = await api.delete('/excluir', payload);
+            const response = await api.delete('usuarios/excluir', params);
             return response.data;
         } catch(error) {
             return console.log(error);
