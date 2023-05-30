@@ -3,7 +3,6 @@ import api from "./api";
 export default {
 
     async listarProdutos(param) {
-        console.log(param);
         try{
             const response = await api().post('produtos/listar', param);
             return response.data

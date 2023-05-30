@@ -73,7 +73,7 @@
                   </select>
                 </div>
               </div>
-            </div>  
+            </div>
           </template>
           <template v-slot:footer>
             <button class="button is-success" type="submit" @click="cadastrarProduto()">Salvar</button>
@@ -161,9 +161,6 @@ export default defineComponent({
       this.listarProdutos()
     },
     async listarProdutos() {
-      console.log(this.formPesquisa)
-      // eslint-disable-next-line no-debugger
-      debugger;
       const response = await produto.listarProdutos(
         {
           id_produto: this.formPesquisa.codigo == '' ? 0 : parseInt(this.formPesquisa.codigo),
