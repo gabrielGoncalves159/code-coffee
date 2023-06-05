@@ -35,10 +35,9 @@ const getProdutosComanda = async (req) => {
 const getComandasVendas = async (req) => {
 	const {id_comanda, status_comanda, data} = req;
 	var query = `SELECT c.id_comanda AS comanda,
-						CASE c.status WHEN 'PP' THEN 'Pendente Pagamento' WHEN 'P' THEN 'Pago' ELSE 'Cancelado' END AS status_venda,
+						CASE c.status_comanda WHEN 'PP' THEN 'Pendente Pagamento' WHEN 'P' THEN 'Pago' ELSE 'Cancelado' END AS status_comanda,
 						c.data_venda,
-						SUM(pv.quantidade_produto), 
-						SUM(p.valor_produto) 
+						SUM(pv.quantidade_produto * p.valor_produto) valor_total
 				   FROM 
 						produto_has_comanda_venda pv
 				   INNER JOIN produto p ON p.id_produto = pv.id_produto
@@ -53,7 +52,7 @@ const getComandasVendas = async (req) => {
 		if(id_comanda != 0){
 			query += ' AND ';
 		}
-		query += `c.status = ${status_comanda}`;
+		query += `c.status_comanda = '${status_comanda}'`;
 	}
 	if(data != ''){
 		if(status_comanda != '' || id_comanda != 0){

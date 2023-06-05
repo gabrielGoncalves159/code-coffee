@@ -7,16 +7,16 @@ const getProdutos = async (req) => {
 
 	var query = 'SELECT * FROM produto ';
 	
-	if(id_produto !== 0 || nome !== ''){
+	if((id_produto && id_produto !== 0) || (nome && nome !== '')){
 		query += 'WHERE ';
 	}
-	if (id_produto !== 0){
+	if ((id_produto && id_produto !== 0)){
 		query += `id_produto = ${id_produto}`;
 	}
-	if (id_produto !== 0 && nome !== ''){
+	if ((id_produto && id_produto !== 0) && (nome && nome !== '')){
 		query += ' AND ';
 	}
-	if(nome !== ''){
+	if((nome && nome !== '')){
 		query += `nome = '${nome}'`;
 	}
 	const response = await connection.execute(query);
