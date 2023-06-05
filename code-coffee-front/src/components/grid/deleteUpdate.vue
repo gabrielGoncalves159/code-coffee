@@ -1,17 +1,19 @@
 <template>
     <div>
-      <a @click="editRow">
-        <i class="fa fa-edit"></i>
-      </a>
-      <a @click="deleteRow">
-        <i class="fa fa-trash"></i>
-      </a>
+      <span>
+        <button @click="editRow">
+          E
+        </button>
+      </span>
+      <span>
+        <button @click="deleteRow">D</button>
+      </span>
     </div>
 </template>
 
 <script>
 export default {
-  name: 'ActionIcons',
+  name: 'deleteUpdate',
   methods: {
     editRow() {
       this.$emit('edit-row')

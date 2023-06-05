@@ -9,29 +9,47 @@
               <div class="field">
                 <label class="title is-6">Código:</label>
                 <div class="control">
-                  <input class="input" type="text" v-model="formVenda.codigo" style="width: 80px"/>
+                  <input
+                    class="input"
+                    type="text"
+                    v-model="formVenda.codigo"
+                    style="width: 80px"
+                  />
                 </div>
               </div>
             </div>
           </div>
           <div class="control is-expanded">
-              <label class="title is-6">Produto:</label>
-              <div class="control is-expanded">
-                <div class="select is-link">
-                  <select v-model="formVenda.produto" :style="{ width: '400px' }"  @change="selected()">
-                    <option v-for="option in listaProduto" :value="option.title" :key="option.value">
-                      {{ option.title }}
-                    </option>
-                  </select>
-                </div>
+            <label class="title is-6">Produto:</label>
+            <div class="control is-expanded">
+              <div class="select is-link">
+                <select
+                  v-model="formVenda.produto"
+                  :style="{ width: '400px' }"
+                  @change="selected()"
+                >
+                  <option
+                    v-for="option in listaProduto"
+                    :value="option.title"
+                    :key="option.value"
+                  >
+                    {{ option.title }}
+                  </option>
+                </select>
               </div>
             </div>
-            <div class="control">
+          </div>
+          <div class="control">
             <div class="container">
               <div class="field">
                 <label class="title is-6">Quant:</label>
                 <div class="control">
-                  <input class="input" type="text" v-model="formVenda.quantidade" style="width: 80px"/>
+                  <input
+                    class="input"
+                    type="text"
+                    v-model="formVenda.quantidade"
+                    style="width: 80px"
+                  />
                 </div>
               </div>
             </div>
@@ -41,7 +59,13 @@
               <div class="field">
                 <label class="title is-6">Unidade:</label>
                 <div class="control">
-                  <input class="input" type="text" v-model="formVenda.unidadeMedida" style="width: 80px" disabled/>
+                  <input
+                    class="input"
+                    type="text"
+                    v-model="formVenda.unidadeMedida"
+                    style="width: 80px"
+                    disabled
+                  />
                 </div>
               </div>
             </div>
@@ -51,13 +75,21 @@
               <div class="field">
                 <label class="title is-6">Valor Unit:</label>
                 <div class="control">
-                  <input class="input" type="text" v-model="formVenda.valor" style="width: 80px" disabled/>
+                  <input
+                    class="input"
+                    type="text"
+                    v-model="formVenda.valor"
+                    style="width: 80px"
+                    disabled
+                  />
                 </div>
               </div>
             </div>
           </div>
           <div class="control">
-            <button class="button is-success" type="submet" @click="arreyDeProdutos()">Adicionar</button>
+            <button class="button is-success" type="submet" @click="arreyDeProdutos()">
+              Adicionar
+            </button>
           </div>
         </div>
       </header>
@@ -78,10 +110,18 @@
       <footer class="modal-card-foot footer">
         <div class="box">
           <label for="total" class="label">Total:</label>
-          <input class="input is-normal" v-model="totalVenda" type="text" placeholder="Total" name="total" />
+          <input
+            class="input is-normal"
+            v-model="totalVenda"
+            type="text"
+            placeholder="Total"
+            name="total"
+          />
         </div>
         <div>
-          <button class="button is-success" @click="efetivarProdutosComanda()">Efetuar Venda</button>
+          <button class="button is-success" @click="efetivarProdutosComanda()">
+            Efetuar Venda
+          </button>
           <button class="button" @click="limparArray()">Cancelar</button>
         </div>
       </footer>
@@ -89,12 +129,12 @@
   </div>
 </template>
 <script>
-import moment from 'moment';
+import moment from "moment";
 import { defineComponent } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { reactive, ref } from "vue";
 import produto from "../services/produto";
-import comandaVenda from "../services/comandaVenda"
+import comandaVenda from "../services/comandaVenda";
 
 export default defineComponent({
   name: "VendaBalcao",
@@ -102,77 +142,81 @@ export default defineComponent({
   data() {
     return {
       formVenda: {
-        produto: '',
-        codigo: '',
-        unidadeMedida: '',
-        quantidade: '',
-        valor: ''
+        produto: "",
+        codigo: "",
+        unidadeMedida: "",
+        quantidade: "",
+        valor: "",
       },
-      listaProduto: [{
-        value: '',
-        title: ''
-      }],
+      listaProduto: [
+        {
+          value: "",
+          title: "",
+        },
+      ],
       produtoComanda: [],
       dataProduto: [],
       totalVenda: 0,
-    }
+    };
   },
   mounted() {
     this.listarProdutos();
   },
   methods: {
-    async listarProdutos(){
-      const response = await produto.listarProdutos(
-        {
-          id_produto: 0,
-          nome: ''
-        }
-      );
+    async listarProdutos() {
+      const response = await produto.listarProdutos({
+        id_produto: 0,
+        nome: "",
+      });
       this.listaProduto = response.map((x) => ({
         value: x.id_produto,
-        title: x.nome
-      }))
+        title: x.nome,
+      }));
       this.dataProduto = response;
     },
-    async selected(){
-      const value = this.dataProduto.filter((x) => x.nome == this.formVenda.produto)
-      value.map((x) => (
-        this.formVenda.codigo = x.id_produto,
-        this.formVenda.unidadeMedida = x.unidade_medida,
-        this.formVenda.valor = x.valor_produto
-      ));
+    async selected() {
+      const value = this.dataProduto.filter((x) => x.nome == this.formVenda.produto);
+      value.map(
+        (x) => (
+          (this.formVenda.codigo = x.id_produto),
+          (this.formVenda.unidadeMedida = x.unidade_medida),
+          (this.formVenda.valor = x.valor_produto)
+        )
+      );
     },
-    arreyDeProdutos(){
+    arreyDeProdutos() {
       var value = {
-        id: this.formVenda.codigo, 
+        id: this.formVenda.codigo,
         nome: this.formVenda.produto,
         quantidade: this.formVenda.quantidade,
         unidade: this.formVenda.unidadeMedida,
-        valorUnitario: parseFloat((parseInt(this.formVenda.quantidade) * parseFloat(this.formVenda.valor)))
-      }
+        valorUnitario: parseFloat(
+          parseInt(this.formVenda.quantidade) * parseFloat(this.formVenda.valor)
+        ),
+      };
       this.produtoComanda.push(value);
       this.rowData.value = this.produtoComanda;
       this.totalVenda += parseFloat(value.valorUnitario);
       this.formVenda = {
-        codigo: '',
-        unidadeMedida: '',
-        quantidade: '',
-        valor: ''
-      }
+        codigo: "",
+        unidadeMedida: "",
+        quantidade: "",
+        valor: "",
+      };
     },
-    async efetivarProdutosComanda(){
+    async efetivarProdutosComanda() {
       const payload = {
         produto: this.rowData.value,
-        data: moment().format('YYYY-MM-DD hh:mm:ss ')
-      }
+        data: moment().format("YYYY-MM-DD hh:mm:ss "),
+      };
       await comandaVenda.inserirProdutoComanda(payload);
-      this.limparArray()
+      this.limparArray();
     },
     limparArray() {
-      this.produtoComanda = []
-      this.rowData.value = []
-      this.totalVenda = 0
-    }
+      this.produtoComanda = [];
+      this.rowData.value = [];
+      this.totalVenda = 0;
+    },
   },
   setup() {
     const gridApi = ref(null);

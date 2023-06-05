@@ -12,7 +12,8 @@ export default {
     },
     async listarComandaVenda(param) {
         try {
-            await api().post('/comanda-venda/listar-comanda-venda', param);
+            const response = await api().post('/comanda-venda/listar-comanda-venda', param);
+            return response.data
         }catch(error) {
             return console.log("erro ao listar comandas:". error)
         }

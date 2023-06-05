@@ -5,18 +5,43 @@
       <header class="modal-card-head">
         <div class="field is-grouped group">
           <div class="control">
-            <InputData :label="'Data'" />
+            <div class="field">
+              <label class="title is-6">Data:</label>
+              <div class="control">
+                <input class="input" type="date" v-model="form.data" />
+              </div>
+            </div>
           </div>
           <div class="control">
-            <Input :label="'Nº Comanda'" :type="'text'" />
+            <div class="container">
+              <div class="field">
+                <label class="title is-6">Nº Comanda:</label>
+                <div class="control">
+                  <input class="input" type="text" v-model="form.comanda" />
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="control">
-            <Select :label="'Status comanda'" />
+          <div class="control is-expanded">
+            <label class="title is-6">Status comanda:</label>
+            <div class="control is-expanded">
+              <div class="select is-link">
+                <select v-model="form.statusComanda" @change="selected()">
+                  <option
+                    v-for="option in statusComanda"
+                    :value="option.value"
+                    :key="option.value"
+                  >
+                    {{ option.title }}
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
           <div class="control">
             <div class="field is-grouped">
               <div class="control">
-                <button class="button is-info">Pesquisar</button>
+                <button class="button is-info" @click="listarComandas()">Pesquisar</button>
               </div>
               <div class="control">
                 <button class="button is-link is-light">
@@ -46,35 +71,65 @@
   </div>
 </template>
 <script>
+import moment from "moment";
 import { defineComponent } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
-import { reactive, onMounted, ref } from "vue";
-import Input from "@/components/form/Input.vue";
-
-import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
-import "ag-grid-community/styles/ag-theme-material.css"; // Optional theme CSS
-import InputData from "@/components/form/InputData.vue";
-import Select from "@/components/form/Select.vue";
+import { reactive, ref } from "vue";
+import comandaVenda from "../services/comandaVenda";
+import deleteUpdateVue from "../components/grid/deleteUpdate.vue";
 
 export default defineComponent({
   name: "VendaBalcao",
-  components: { AgGridVue, Input, InputData, Select },
+  components: { AgGridVue },
+  data() {
+    return {
+      form: {
+        data: "",
+        comanda: "",
+        statusComanda: "",
+      },
+      statusComanda: [
+        { value: '', title: "Todos" },
+        { value: "P", title: "Pago" },
+        { value: "PP", title: "Pendente Pagamento" },
+        { value: "C", title: "Cancelada" },
+      ],
+    };
+  },
+  mounted() {
+    this.listarComandas();
+  },
+  methods: {
+    async listarComandas() {
+      const payload = {
+        id_comanda: this.form.comanda !== "" ? this.form.comanda : 0,
+        status_comanda: this.form.statusComanda,
+        data: this.form.data,
+      };
+      const response = await comandaVenda.listarComandaVenda(payload);
+      const values = response.map((x) => ({
+        ...x,
+        data: moment(x.data_venda).format('DD/MM/YYYY')
+      }))
+      this.rowData.value = values;
+    },
+  },
   setup() {
     const gridApi = ref(null);
     const rowData = reactive({});
-    const columnDefs = reactive({
-      value: [
-        { field: "Codigo" },
-        { field: "NomeProduto" },
-        { field: "Quantidade" },
-        { field: "Valor" },
-        { field: "Unidade" },
-      ],
-    });
 
     // Obtain API from grid's onGridReady event
     const onGridReady = (params) => {
       gridApi.value = params.api;
+    };
+
+    const poundFormatter = (params) => {
+      return (
+        'R$' +
+        Math.floor(params.value)
+          .toString()
+          .replace(/(\d)(?=(\d{3})+(?!\d))/g)
+      )
     };
 
     const defaultColDef = {
@@ -83,11 +138,14 @@ export default defineComponent({
       flex: 1,
     };
 
-    // Example load data from sever
-    onMounted(() => {
-      fetch("https://www.ag-grid.com/example-assets/row-data.json")
-        .then((result) => result.json())
-        .then((remoteRowData) => (rowData.value = remoteRowData));
+    const columnDefs = reactive({
+      value: [
+        { headerName: "Comanda", field: "comanda" },
+        { headerName: "Data", field: "data" },
+        { headerName: "Valor Total", field: "valor_total", valueFormatter: poundFormatter },
+        { headerName: "Status", field: "status_comanda" },
+        { headerName: "Ação", cellRenderer: deleteUpdateVue },
+      ],
     });
 
     return {
@@ -108,6 +166,9 @@ export default defineComponent({
 </script>
 
 <style>
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-material.css";
+
 .teste {
   display: flex;
 }
