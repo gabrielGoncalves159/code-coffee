@@ -5,19 +5,13 @@ const getProdutos = async (req) => {
 
 	const { id_produto, nome } = req;
 
-	var query = 'SELECT * FROM produto ';
+	var query = 'SELECT * FROM produto WHERE status_ativo = 1 ';
 	
-	if((id_produto && id_produto !== 0) || (nome && nome !== '')){
-		query += 'WHERE ';
-	}
 	if ((id_produto && id_produto !== 0)){
-		query += `id_produto = ${id_produto}`;
-	}
-	if ((id_produto && id_produto !== 0) && (nome && nome !== '')){
-		query += ' AND ';
+		query += `AND id_produto = ${id_produto}`;
 	}
 	if((nome && nome !== '')){
-		query += `nome = '${nome}'`;
+		query += `AND nome LIKE '%${nome}%'`;
 	}
 	const response = await connection.execute(query);
 	return response;
@@ -25,24 +19,29 @@ const getProdutos = async (req) => {
 
 const inserirProdutos = async (req) => {
 
-	const { nomeProduto, valorUnitario, unidadeMedida } = req;
-	const query = 'INSERT INTO produto (nome, valor_produto, unidade_medida) VALUE (?, ?, ?)';
-
-	const response = await connection.execute(query, [nomeProduto, valorUnitario, unidadeMedida]);
-	return response;
+	if(req.id_produto == 0) {
+		const { nomeProduto, valorUnitario, unidadeMedida, ativo } = req;
+		const query = 'INSERT INTO produto (nome, valor_produto, unidade_medida, status_ativo) VALUE (?, ?, ?, ?)';
+	
+		const response = await connection.execute(query, [nomeProduto, valorUnitario, unidadeMedida, ativo]);
+		return response;
+	}
+	else {
+		await updateProduto(req);
+	}
 };
 
 const updateProduto = async (req) => {
-	const {id, nome, valorUnitario, unidadeMedida} = req;
-	const query = 'CALL alterar_produto(?, ?, ?, ?);';
-	const response = await connection.execute(query, [id, nome, valorUnitario, unidadeMedida]);
+	const {id_produto , nomeProduto, valorUnitario, unidadeMedida} = req;
+	const query = 'CALL alterarDadosProduto(?, ?, ?, ?);';
+	const response = await connection.execute(query, [id_produto, nomeProduto, valorUnitario, unidadeMedida]);
 	return response;
 };
 
 const deleteProduto = async (req) => {
-	const {id_produto} = req;
-	const query = 'DELETE FROM produto WHERE id_produto = ?';
-	const response = await connection.execute(query, [id_produto]);
+	const {id} = req;
+	const query = `UPDATE produto SET status_ativo = 0 WHERE id_produto = ${id}`;
+	const response = await connection.execute(query);
 	return response;
 };
 

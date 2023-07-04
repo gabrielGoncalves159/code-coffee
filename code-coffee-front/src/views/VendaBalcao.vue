@@ -20,9 +20,12 @@
             </div>
           </div>
           <div class="control is-expanded">
+            <p class="help is-danger" v-if="!formVenda.produto && formValid">
+                Preenchimento obrigatório!!
+              </p>
             <label class="title is-6">Produto:</label>
             <div class="control is-expanded">
-              <div class="select is-link">
+              <div class="select is-link" :class="{ 'is-danger': !formVenda.produto && formValid }">
                 <select
                   v-model="formVenda.produto"
                   :style="{ width: '400px' }"
@@ -41,14 +44,18 @@
           </div>
           <div class="control">
             <div class="container">
+              <p class="help is-danger" v-if="!formVenda.quantidade_produto && formValid ">
+                Preenchimento obrigatório!!
+              </p>
               <div class="field">
                 <label class="title is-6">Quant:</label>
                 <div class="control">
                   <input
                     class="input"
                     type="text"
-                    v-model="formVenda.quantidade"
+                    v-model="formVenda.quantidade_produto"
                     style="width: 80px"
+                    :class="{ 'is-danger': !formVenda.quantidade_produto && formValid }"
                   />
                 </div>
               </div>
@@ -87,8 +94,11 @@
             </div>
           </div>
           <div class="control">
-            <button class="button is-success" type="submet" @click="arreyDeProdutos()">
-              Adicionar
+            <button class="button is-primary" @click="arreyDeProdutos()"> 
+              <span class="icon is-small is-left">
+                <i class="fa fa-plus-circle" aria-hidden="true"></i> 
+              </span>
+              <span>Adicionar</span>
             </button>
           </div>
         </div>
@@ -97,8 +107,8 @@
         <ag-grid-vue
           class="ag-theme-material"
           style="height: 250px"
-          :columnDefs="columnDefs.value"
-          :rowData="rowData.value"
+          :columnDefs="columnDefs"
+          :rowData="rowData"
           :defaultColDef="defaultColDef"
           rowSelection="multiple"
           animateRows="true"
@@ -119,8 +129,8 @@
           />
         </div>
         <div>
-          <button class="button is-success" @click="efetivarProdutosComanda()">
-            Efetuar Venda
+          <button class="button is-success" @click="efetivarProdutosComanda()" :disabled="rowData.length == 0">
+            Finalizar Comanda
           </button>
           <button class="button" @click="limparArray()">Cancelar</button>
         </div>
@@ -132,9 +142,10 @@
 import moment from "moment";
 import { defineComponent } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
-import { reactive, ref } from "vue";
+import { ref } from "vue";
 import produto from "../services/produto";
 import comandaVenda from "../services/comandaVenda";
+import format from "../store/format";
 
 export default defineComponent({
   name: "VendaBalcao",
@@ -145,7 +156,7 @@ export default defineComponent({
         produto: "",
         codigo: "",
         unidadeMedida: "",
-        quantidade: "",
+        quantidade_produto: "",
         valor: "",
       },
       listaProduto: [
@@ -154,15 +165,37 @@ export default defineComponent({
           title: "",
         },
       ],
-      produtoComanda: [],
       dataProduto: [],
       totalVenda: 0,
+      formValid: false,
+      rowData: [],
+      columnDefs: [
+        { headerName: "Código", field: "id_produto" },
+        { headerName: "Produto", field: "nome" },
+        { headerName: "Unidade", field: "unidade" },
+        { headerName: "Quantidade", field: "quantidade_produto", editable: true },
+        { headerName: "Valor Unit.", field: "valorUnitario" },
+        { headerName: "Ação", cellRenderer: this.buttonsActions },
+      ],
     };
   },
   mounted() {
     this.listarProdutos();
   },
   methods: {
+    buttonsActions(params){
+      const wrapper = document.createElement("div");
+      wrapper.classList.add('a-button')
+
+      // Botão de exclusão
+      const deleteButton = document.createElement("button");
+      deleteButton.innerHTML = '<span class="icon is-small"><i class="fa fa-trash" style="color: #ff0000;"></i></span>';
+      deleteButton.classList.add("button"); // Adiciona a classe "delete-button"
+      deleteButton.addEventListener("click", () => this.removerProduto(params.data));
+      wrapper.appendChild(deleteButton);
+
+      return wrapper;
+    },
     async listarProdutos() {
       const response = await produto.listarProdutos({
         id_produto: 0,
@@ -180,56 +213,86 @@ export default defineComponent({
         (x) => (
           (this.formVenda.codigo = x.id_produto),
           (this.formVenda.unidadeMedida = x.unidade_medida),
-          (this.formVenda.valor = x.valor_produto)
+          (this.formVenda.valor = format.formatarValorEmReal(x.valor_produto))
         )
       );
     },
     arreyDeProdutos() {
-      var value = {
-        id: this.formVenda.codigo,
-        nome: this.formVenda.produto,
-        quantidade: this.formVenda.quantidade,
-        unidade: this.formVenda.unidadeMedida,
-        valorUnitario: parseFloat(
-          parseInt(this.formVenda.quantidade) * parseFloat(this.formVenda.valor)
-        ),
-      };
-      this.produtoComanda.push(value);
-      this.rowData.value = this.produtoComanda;
-      this.totalVenda += parseFloat(value.valorUnitario);
+
+      this.formValid = true;
+      if (!this.formVenda.quantidade_produto || !this.formVenda.produto) {
+          return;
+      }
+                                                                                                                             
+      this.formValid = false;
+      const valorGrid = this.rowData.filter((x) => x.id_produto == this.formVenda.codigo);
+      if(valorGrid.length > 0)
+      {
+        for(let linha of this.rowData)
+        {
+          if(linha.id_produto === valorGrid[0].id_produto){
+            // eslint-disable-next-line no-debugger
+            debugger
+            linha.quantidade_produto += parseInt(this.formVenda.quantidade_produto)
+          }
+        }
+      }else {
+        this.rowData.push({
+          id_produto: this.formVenda.codigo,
+          nome: this.formVenda.produto,
+          quantidade_produto: parseInt(this.formVenda.quantidade_produto),
+          unidade: this.formVenda.unidadeMedida,
+          valorUnitario: this.formVenda.valor
+        });
+      }
+      this.gridApi.setRowData(this.rowData)
+      this.calcularTotal(this.rowData.map((x) => ({
+          ...x,
+          valorUnitario: format.removerFormat(x.valorUnitario)
+        })));
+      this.limparFormulario();
+    },
+    limparFormulario() {
       this.formVenda = {
         codigo: "",
         unidadeMedida: "",
-        quantidade: "",
+        quantidade_produto: "",
         valor: "",
       };
     },
+    calcularTotal(params) {
+        this.totalVenda = 0;
+        for (let valor of params) {
+          this.totalVenda += valor.quantidade_produto * parseFloat(valor.valorUnitario); 
+        }
+        this.totalVenda = format.formatarValorEmReal(this.totalVenda)
+    },
     async efetivarProdutosComanda() {
       const payload = {
-        produto: this.rowData.value,
+        produto: this.rowData.map((x) => ({
+          ...x,
+          valorUnitario: format.removerFormat(x.valorUnitario)
+        })),
         data: moment().format("YYYY-MM-DD hh:mm:ss "),
       };
       await comandaVenda.inserirProdutoComanda(payload);
       this.limparArray();
     },
     limparArray() {
-      this.produtoComanda = [];
-      this.rowData.value = [];
+      this.rowData = [];
       this.totalVenda = 0;
+    },
+    async removerProduto(params) {
+      for(let key in this.rowData){
+          if(this.rowData[key].id_produto === params.id_produto){
+            this.rowData.splice(key,1);
+          }
+        }
+        this.gridApi.setRowData(this.rowData);
     },
   },
   setup() {
     const gridApi = ref(null);
-    const rowData = reactive({});
-    const columnDefs = reactive({
-      value: [
-        { headerName: "Código", field: "id" },
-        { headerName: "Produto", field: "nome" },
-        { headerName: "Unidade", field: "unidade" },
-        { headerName: "Quantidade", field: "quantidade" },
-        { headerName: "Valor Unit.", field: "valorUnitario" },
-      ],
-    });
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
@@ -243,13 +306,8 @@ export default defineComponent({
 
     return {
       onGridReady,
-      columnDefs,
-      rowData,
       defaultColDef,
-      cellWasClicked: (event) => {
-        // Example of consuming Grid Event
-        console.log("cell was clicked", event);
-      },
+      gridApi,
       deselectRows: () => {
         gridApi.value.deselectAll();
       },
@@ -261,6 +319,7 @@ export default defineComponent({
 <style>
 @import "ag-grid-community/styles/ag-grid.css";
 @import "ag-grid-community/styles/ag-theme-material.css";
+@import "../../node_modules/@fortawesome/fontawesome-free/css/all.css";
 
 .buttom-margin {
   margin-top: 34px;
@@ -277,5 +336,9 @@ export default defineComponent({
 }
 h1 {
   margin: 20px;
+}
+.a-button {
+  display: flex;
+  justify-content: space-evenly;
 }
 </style>

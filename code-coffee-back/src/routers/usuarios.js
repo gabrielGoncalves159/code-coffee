@@ -8,5 +8,5 @@ router.post('/listar', cors(), usuarioControllers.listarUsuarios);
 router.get('/listarTipoUsuario', cors(), usuarioControllers.listarTipoUsuario);
 router.post('/inserir', cors(), validarDadosUsuarioMiddleware.validarBody, usuarioControllers.inserirUsuario);
 router.patch('/editar', cors(), validarDadosUsuarioMiddleware.validarBody, usuarioControllers.editarUsuario);
-router.delete('/excluir', cors(), usuarioControllers.excluirUsuario);
+router.post('/excluir', cors(), usuarioControllers.excluirUsuario);
 module.exports = router;

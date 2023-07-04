@@ -3,20 +3,25 @@ const connection = require('./connection');
 const numeroProximaComanda = async () => {
 	var query = 'SELECT id_comanda FROM comanda_venda ORDER BY id_comanda DESC LIMIT 1';
 	const [rows] = await connection.execute(query);
-	const numeroUltimaComanda = rows[0].id_comanda;
+	const numeroUltimaComanda = rows[0] ? rows[0].id_comanda : 1;
 	return numeroUltimaComanda + 1;
 };
 
-const inserirProdutoComanda = async (req) => {
+const criarComanda = async (req) => {
 	const { produto, data } = req;
-	const numeroComanda = await numeroProximaComanda();
+	const idComanda = await numeroProximaComanda();
   
-	const queryComanda = `INSERT INTO comanda_venda (id_comanda, status_comanda, data_venda) VALUES (${numeroComanda}, 'PP', '${data}')`;
+	const queryComanda = `INSERT INTO comanda_venda (id_comanda, status_comanda, data_venda) VALUES (${idComanda}, 'PP', '${data}')`;
 	await connection.execute(queryComanda);
-  
+
+	await inserirProdutoComanda(idComanda, produto);
+};
+
+const inserirProdutoComanda = async (idComanda, produto) => {
 	var response;
+
 	for (let i = 0; i < produto.length; i++) {
-		const queryProdutoComanda = `INSERT INTO produto_has_comanda_venda (id_produto, id_comanda, quantidade_produto) VALUES (${produto[i].id}, ${numeroComanda}, ${produto[i].quantidade})`;
+		const queryProdutoComanda = `INSERT INTO produto_has_comanda_venda (id_produto, id_comanda, quantidade_produto) VALUES (${produto[i].id_produto}, ${idComanda}, ${produto[i].quantidade_produto})`;
 		response = await connection.execute(queryProdutoComanda);
 	}
 	return response;
@@ -58,15 +63,59 @@ const getComandasVendas = async (req) => {
 		if(status_comanda != '' || id_comanda != 0){
 			query += ' AND ';
 		}
-		query += `c.data_venda = ${data}`;
+		query += `c.data_venda LIKE '%${data}%'`;
 	}
 	query += ' group by comanda';
 	const response = await connection.execute(query);
 	return response;
+
 };
 
+
+const updateComanda = async (req) => {
+	const {id, nome, cpf, senha, telefone, idTipoUsuario} = req;
+	const query = 'CALL alterarDadosUsuario(?,?,?,?,?,?)';
+	const response = await connection.execute(query, [id, nome, cpf, senha, telefone, idTipoUsuario]);
+
+	return response;
+};
+
+const alterarStatusComanda = async (req) => {
+	const {idComanda, statusComanda} = req;
+	const query = `UPDATE comanda_venda SET status_comanda = "${statusComanda}" WHERE id_comanda = ${idComanda};`;
+	const response = await connection.execute(query);
+
+	return response;
+};
+
+const finalizarComanda = (req) => {
+	try {
+		const { produto, idComanda, idOpcaoPagamento } = req;
+  
+		const deleteQuery = `DELETE FROM produto_has_comanda_venda WHERE id_comanda = ${idComanda}`;
+		const updateQuery = `UPDATE comanda_venda SET id_opcao_pagamento = ${idOpcaoPagamento} WHERE id_comanda = ${idComanda}`;
+  
+		Promise.all([
+			connection.execute(deleteQuery),
+			connection.execute(updateQuery),
+			inserirProdutoComanda(idComanda, produto),
+			alterarStatusComanda(req)
+		]);
+  
+		return true;
+	} catch (error) {
+		// Lidar com o erro adequadamente
+		console.error('Ocorreu um erro ao finalizar a comanda:', error);
+		return false;
+	}
+};
+  
+
 module.exports = {
+	alterarStatusComanda,
+	updateComanda,
 	getProdutosComanda,
 	getComandasVendas,
-	inserirProdutoComanda,
+	criarComanda,
+	finalizarComanda,
 };

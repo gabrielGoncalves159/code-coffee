@@ -30,7 +30,7 @@ export default {
 
     async editarUsuario(params) {
         try {
-            const response = await api.patch('usuarios/editar', params);
+            const response = await api().patch('usuarios/editar', params);
             return response.data;
         } catch(error) {
             return console.log(error);
@@ -38,9 +38,9 @@ export default {
     },
 
     async excluirUsuario(params) {
+        console.log(params)
         try {
-            const response = await api.delete('usuarios/excluir', params);
-            return response.data;
+            await api().post('usuarios/excluir', params);
         } catch(error) {
             return console.log(error);
         }

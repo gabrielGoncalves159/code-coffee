@@ -1,7 +1,7 @@
 const comandaVendaModels = require('../models/comandaVendaModels');
 
 const inserirProdutoComanda = async (req, res) => {
-	await comandaVendaModels.inserirProdutoComanda(req.body);
+	await comandaVendaModels.criarComanda(req.body);
 	return res.status(200).json();
 };
 
@@ -15,8 +15,20 @@ const listarComandaVenda = async (req, res) => {
 	return res.status(200).json(listaComandaVenda);
 };
 
+const alterarStatusComanda = async (req, res) => {
+	await comandaVendaModels.alterarStatusComanda(req.body);
+	return res.status(204).json();
+};
+
+const finalizarComanda = async (req, res) => {
+	await comandaVendaModels.finalizarComanda(req.body);
+	return res.status(204).json();
+};
+
 module.exports = {
+	alterarStatusComanda,
 	listarProdutosComanda,
 	listarComandaVenda,
 	inserirProdutoComanda,
+	finalizarComanda,
 };

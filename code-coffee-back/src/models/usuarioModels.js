@@ -27,31 +27,32 @@ const getTipoUsuario = async () => {
 	return response;
 };
 
-const insertUsuario = async (res) => {
-	const nome = res.nome;
-	const cpf = res.cpf;
-	const senha = res.senha;
-	const telefone = res.telefone;
-	const idTipoUsuario = res.idTipoUsuario;
-
-	const query = 'INSERT INTO usuario (nome, CPF, senha, telefone, id_tipo_usuario) VALUE (?, ?, ?, ?, ?)';
-	const response = await connection.execute(query, [nome, cpf, senha, telefone, idTipoUsuario]);
-
-	return response;
+const insertUsuario = async (req) => {
+	if(req.idUsuario == 0) {
+		const {nome, cpf, senha, telefone, idTipoUsuario} = req;
+	
+		const query = 'INSERT INTO usuario (nome, CPF, senha, telefone, id_tipo_usuario) VALUE (?, ?, ?, ?, ?)';
+		const response = await connection.execute(query, [nome, cpf, senha, telefone, idTipoUsuario]);
+	
+		return response;
+	}
+	else{
+		await updateUsuario(req);
+	}
 };
 
 const updateUsuario = async (req) => {
-	const {id, nome, cpf, senha, telefone, idTipoUsuario} = req;
-	const query = 'CALL alterar_usuario(?,?,?,?,?,?)';
-	const response = await connection.execute(query, [id, nome, cpf, senha, telefone, idTipoUsuario]);
+	const {idUsuario, nome, cpf, senha, telefone, idTipoUsuario} = req;
+	const query = 'CALL alterarDadosUsuario(?,?,?,?,?,?)';
+	const response = await connection.execute(query, [idUsuario, nome, cpf, senha, telefone, idTipoUsuario]);
 
 	return response;
 };
 
-const deleteUsuario = async (res) => {
-	const id = res.id;
-	const query = 'DELETE FROM usuario WHERE id_usuario = ?';
-	const response = await connection.execute(query, [id]);
+const deleteUsuario = async (req) => {
+	const id = req.id;
+	const query = `DELETE FROM usuario WHERE id_usuario = ${id}`;
+	const response = await connection.execute(query);
 
 	return response;
 };

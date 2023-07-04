@@ -20,9 +20,24 @@ export default {
     },
     async listarProdutoComanda(param) {
         try {
-            await api().post('/comanda-venda/listar-produtos-comanda', param);
+            const response = await api().post('/comanda-venda/listar-produtos-comanda', param);
+            return response;
         }catch(error) {
             return console.log("erro ao listar produtos comanda:". error)
+        }
+    },
+    async alterarStatusComanda(param) {
+        try {
+            await api().post('/comanda-venda/altera-status-comanda', param);
+        }catch(error) {
+            return console.log("erro ao alterar status comanda:", error)
+        }
+    },
+    async finalizarComanda(param) {
+        try {
+            await api().post('/comanda-venda/finaliza-comanda', param);
+        }catch(error) {
+            return console.log("erro ao finalizar comanda", error);
         }
     },
 }

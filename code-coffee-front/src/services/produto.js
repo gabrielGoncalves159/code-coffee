@@ -17,4 +17,18 @@ export default {
             return console.log("erro ao cadastrar novo produto:". error)
         }
     },
+    async excluirProduto(param) {
+        try{
+            await api().post('produtos/excluir', param);
+        }catch(error) {
+            return console.log("erro ao excluir produto:". error)
+        }
+    },
+    async editarProduto(param) {
+        try{
+            await api().post('produtos/alterar', param);
+        }catch(error) {
+            return console.log("erro ao alterar produto:". error)
+        }
+    },
 }
