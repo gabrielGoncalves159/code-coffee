@@ -2,16 +2,16 @@ const connection = require('./connection');
 
 const numeroProximaComanda = async () => {
 	var query = 'SELECT id_comanda FROM comanda_venda ORDER BY id_comanda DESC LIMIT 1';
-	const [rows] = await connection.execute(query);
-	const numeroUltimaComanda = rows[0] ? rows[0].id_comanda : 1;
-	return numeroUltimaComanda + 1;
+	const [numeroUltimaComanda] = await connection.execute(query);
+	return numeroUltimaComanda[0].id_comanda;
 };
 
 const criarComanda = async (req) => {
 	const { produto, data } = req;
+
 	const idComanda = await numeroProximaComanda();
   
-	const queryComanda = `INSERT INTO comanda_venda (id_comanda, status_comanda, data_venda) VALUES (${idComanda}, 'PP', '${data}')`;
+	const queryComanda = `INSERT INTO comanda_venda (status_comanda, data_venda) VALUES ('PP', '${data}')`;
 	await connection.execute(queryComanda);
 
 	await inserirProdutoComanda(idComanda, produto);
