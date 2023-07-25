@@ -221,7 +221,7 @@ export default defineComponent({
     async cadastrarUsuario() {
       this.formValid = true;
 
-      if (!this.formUsuario.idTipoUsuario  || !this.formUsuario.nome || !this.formUsuario.cpf || (this.formUsuario.cpf.length < 11 ) || !this.formUsuario.telefone || !this.formUsuario.senha) {
+      if (!this.formUsuario.idTipoUsuario  || !this.formUsuario.nome || !this.formUsuario.cpf || (this.formUsuario.cpf.length < 11 ) || !this.formUsuario.telefone || (this.formUsuario.telefone.length < 11 ) || !this.formUsuario.senha) {
         return; // Se algum campo estiver vazio, não executa o algoritmo
       }
       const payload = {

@@ -14,6 +14,7 @@
                     type="text"
                     v-model="formVenda.codigo"
                     style="width: 80px"
+                    disabled
                   />
                 </div>
               </div>
@@ -231,8 +232,6 @@ export default defineComponent({
         for(let linha of this.rowData)
         {
           if(linha.id_produto === valorGrid[0].id_produto){
-            // eslint-disable-next-line no-debugger
-            debugger
             linha.quantidade_produto += parseInt(this.formVenda.quantidade_produto)
           }
         }

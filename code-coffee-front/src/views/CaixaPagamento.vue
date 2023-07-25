@@ -149,6 +149,14 @@ export default defineComponent({
         cancelButton.classList.add("button"); // Adiciona a classe "cancelButton"
         cancelButton.addEventListener("click", () => this.cancelarComanda(params.data));
         wrapper.appendChild(cancelButton);
+      } 
+      else if(params.data.status_comanda === 'Cancelado') {
+        // Botão de reprocessar comanda
+        const refaturaButton = document.createElement("button");
+        refaturaButton.innerHTML = '<span class="icon is-small"><i class="fa fa-refresh" aria-hidden="true"></i></span>';
+        refaturaButton.classList.add("button"); // Adiciona a classe "cancelButton"
+        refaturaButton.addEventListener("click", () => this.refatorarComanda(params.data));
+        wrapper.appendChild(refaturaButton);
       }
 
       // Botão de visualizar
@@ -189,6 +197,11 @@ export default defineComponent({
       this.dadosVenda = params;
       this.showModalPagamento = true;
 
+    },
+    async refatorarComanda(params) {
+      const payload = {idComanda: params.comanda, statusComanda: 'PP'}
+      await comandaVenda.alterarStatusComanda(payload);
+      this.listarComandas();
     },
   },
   setup() {

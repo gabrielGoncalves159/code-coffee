@@ -306,10 +306,11 @@
         );
       },
       adicionarProduto() {
-        this.formValid = true;
         if (!this.formVenda.quantidade || !this.formVenda.produto) {
+          this.formValid = true;
           return;
         }
+        this.formValid = false;
 
         const value = this.rowData.filter((x) => x.id_produto == this.formVenda.codigo);
         if(value.length > 0)
@@ -327,8 +328,8 @@
             nome: this.formVenda.produto,
             id_produto: this.formVenda.codigo,
             unidade_medida: this.formVenda.unidadeMedida,
-            quantidade_produto: this.formVenda.quantidade,
-            valor_produto: this.formVenda.valor,
+            quantidade_produto: parseInt(this.formVenda.quantidade),
+            valor_produto: format.formatarValorEmReal(this.formVenda.valor),
           })
         }
         this.gridApi.setRowData(this.rowData);
@@ -339,7 +340,10 @@
           quantidade: "",
           valor: "",
         };
-        this.calcularTotal(this.rowData)
+        this.calcularTotal(this.rowData.map((x) => ({
+          ...x,
+          valor_produto: format.removerFormat(x.valor_produto)
+        })))
       },
       removerProduto(params){
         for(let key in this.rowData){
